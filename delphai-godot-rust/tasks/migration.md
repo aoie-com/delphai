@@ -250,7 +250,7 @@
 | Slice | 範囲 | RED → GREEN テスト |
 |---|---|---|
 | **M1.0** ✅ | プロジェクト雛形 (`Assets/Scripts/Core/` + `Assets/Tests/EditMode/` + asmdef、Smoke 1 本) | `SmokeTest.Core_Build_Version_IsAccessible` (2026-04-26) |
-| **M1.1** | `MoveState` + `World.GetCitizenWorldPos(idx, alpha)` 補間 | `world_pos_at_alpha_boundaries_match_prev_and_current` 系 2-3 本 |
+| **M1.1** ✅ | `TilePos` + `MoveState` + `Citizen` + `World` (Spawn / Tick / GetCitizenWorldPos) | 16 tests pass、`World_Pos_At_Alpha_Boundaries_Match_Prev_And_Current` 含む (2026-04-26) |
 | **M1.2** | `Resource`（Berry/Water）+ `Vitals` + decay tick | `citizen_runs_many_cycles_without_freezing`（10k tick） |
 | **M1.3** | `BehaviorState` + 純粋関数 `Decide(...)` + Gather/Drink | `hydration_priority_trumps_food_when_both_low` + `citizen_drinks_then_eats_when_both_needs_low` |
 | **M1.4** | `Animal`（Deer）+ hunt fallback | `citizen_eventually_hunts_deer_when_berries_run_out` |
