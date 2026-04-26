@@ -108,57 +108,14 @@
 
 ## 移行フェーズ（Don't burn the bridge 準拠）
 
-### Phase M0: Unity 環境セットアップ（0.5 日）✅ **完了 (2026-04-26, commit aa0c0e5)**
+### Phase M0 / M0.5 ✅ 完了 (2026-04-26)
 
-**並列作業、Godot+Rust は無影響**
-
-- [x] Unity Hub + Unity 6 LTS インストール（Mac 上）
-- [x] **repo ルート直下** に新規 Unity プロジェクト作成（当初予定の `unity/` サブディレクトリではなくルート直下、D2 反転参照）
-- [x] 旧 Godot+Rust 一式を `delphai-godot-rust/` サブディレクトリへ移動
-- [x] Mac で Unity エディタ起動確認、空シーンが Play できる
-- [x] root `.gitignore` を Unity テンプレで整備（`Library/` `Temp/` `Obj/` `Build/` `Logs/` `UserSettings/` 等）
-- [x] 旧 Godot/Rust 用 `.gitignore` は `delphai-godot-rust/.gitignore` に保存（`/target` `*.import` `.godot/` `**/.DS_Store` 等）
-- [x] **Git LFS — 不採用に方針変更（Q4 更新）** — アセット（fbx/glb/png/wav 等）は git で追跡せず外部ストレージ管理
-  - `git lfs uninstall` 済、`.gitattributes` 削除済
-  - root `.gitignore` でバイナリ拡張子を除外、必須軽量ファイルのみホワイトリスト
-  - Mac 側で別途 `git lfs install` を走らせる必要は無い
-- [x] **鉄則の踏み絵**: `cd delphai-godot-rust && cargo test --workspace` が引き続き green（2026-04-26: **167 tests passed** / 154 in delphai-core + 13 in delphai-gdext）
-  - `make build` / Godot 起動は Mac 環境で別途確認（ローカル責務、devcontainer では godot バイナリ不在）
-- [x] root の `.gitignore copy` を削除（古い Godot 用 ignore のバックアップ、不要）
-- [x] `.DS_Store` を root `.gitignore` に追加 + `git rm --cached .DS_Store` で untrack
-- [x] M0 を main にコミット（commit `aa0c0e5`、66 files / +9409 -8）
-
-### Phase M0.5: Unity MCP 最小導入（0.5 日）✅ **完了 (2026-04-26)**
-
-**目的**: M1〜M3 の作業効率化のため、Claude Code から Unity Editor を直接操作できる状態を作る。M0 完了後・M1 着手前に実施。
-
-**前提**: Phase M0 完了（Unity 6 LTS / repo ルート直下に Unity プロジェクト存在 / Mac で Play 可）
-
-> **AI / 人間タスク分離**: AI (devcontainer) では Editor が触れないので調査・設定ファイル雛形まで。実機接続テストとパッケージインストールは Mac 上の人間担当。`(AI)` / `(Mac)` で明示。
-
-#### AI 担当（devcontainer 内で完了可）
-
-- [x] **(AI)** Unity MCP 実装の最終選定（Q6 結論: `CoplayDev/unity-mcp` v9.6.6、2026-04-26 更新参照）
-- [x] **(AI)** プロジェクトルート `.mcp.json` 雛形を用意（HTTP transport を既定、stdio fallback を `_unityMCPStdio_disabled` キーで無効化状態でコメントアウト）
-- [x] **(AI)** `delphai-godot-rust/tasks/todo.md` に Unity MCP 導入予定 / 接続手順 / 既知の制約を 5 行サマリで追記
-
-#### 人間担当（Mac 上で要 Unity Editor）
-
-- [x] **(Mac)** Unity Editor で Window > Package Manager > Add package from git URL に下記を入力 (2026-04-26 完了):
-  - `https://github.com/CoplayDev/unity-mcp.git?path=/MCPForUnity#main`
-- [x] **(Mac)** （HTTP transport の場合）Editor 内 Window > Unity MCP > Start Server をクリック → ポート 8080 で listen 開始確認
-- [ ] **(Mac)** （stdio fallback を使う場合のみ）`uv` を Mac にインストール（`brew install uv` か `curl -LsSf https://astral.sh/uv/install.sh | sh`）し、`.mcp.json` の `_unityMCPStdio_disabled` キーから `_disabled` サフィックスを外して有効化、`_unityMCP` 側は逆に無効化 — **HTTP transport を採用したため不要**
-- [x] **(Mac)** プロジェクトルートで `claude` 起動 → MCP サーバ `unityMCP` が緑で表示される
-- [x] **(Mac)** 接続スモークテスト (2026-04-26 完了)
-  - [x] Hierarchy / Scene 一覧が Claude Code から取得できる（root 2 → Main Camera + Directional Light を取得）
-  - [x] 空シーンに Cube を MCP 経由で 1 個追加 → Editor 目視確認（`SmokeTestCube` を `(0, 0.5, 0)` に追加、MCP 戻り値 success）
-  - [x] Editor コンソールエラーが出ていない（WebSocket info log 1 件のみ、error/warning 0）
-- [x] **(Mac)** **Don't burn the bridge 踏み絵**: Godot 側 `cargo test --workspace` 154+13 passed (devcontainer 内で確認) / `make build` / Mac Godot 起動は Mac 側別途確認（ローカル責務、devcontainer では godot バイナリ不在）
-- [x] **(Mac)** Mac セッション中の AI に頼んで `tasks/todo.md` の Unity MCP 5 行サマリを「導入完了 / 起動手順 / 既知の制約」に書き換え (2026-04-26 完了)
-
-**完了基準**: Claude Code が Unity Editor の Hierarchy を読み、GameObject を 1 個追加できる。Godot 側 3 種 green 維持。 → ✅ **達成 (2026-04-26)**
-
-**注意**: M0.5 では「読み取り中心 + Cube 追加 1 個」までに絞る。シーン破壊リスクのある複雑な編集は M1 以降で慎重に運用。
+- Unity プロジェクトは **repo ルート直下**。`unity/` サブへ後移動はメタ再生成リスクで NG、Godot+Rust 側を `delphai-godot-rust/` へ退避するのが正解 (commit `aa0c0e5`)
+- Unity プロジェクトを `~/Documents/` 配下に置くと iCloud 同期で `Library/PackageCache/` が `* 2` 重複して破損ループ (`@tasks/lessons.md` 参照)
+- Git LFS は採用しない。アセット (fbx/glb/png/wav) は git 追跡せず外部ストレージ。root `.gitignore` でバイナリ除外、必須軽量のみホワイトリスト
+- Unity MCP は HTTP transport 一択。stdio fallback は Mac Bridge 側でも LAN bind 設定が要るので機能しない
+- Mac の Unity Editor 側で毎セッション: `Window > MCP for Unity > Advanced > Allow LAN Bind ON` + URL を `http://0.0.0.0:8080` にして Save → Stop → Start。`127.0.0.1` のままだと container から届かない
+- devcontainer 側の `.mcp.json` は `host.docker.internal:8080/mcp` を向く（`localhost` ではない）
 
 ### Phase M1: 中核ロジック C# 移植（2〜3 日）
 
@@ -179,22 +136,26 @@
 
 #### スライス計画（各スライスで 3 点検証 + commit）
 
-| Slice | 範囲 | RED → GREEN テスト |
+| Slice | 範囲 | 残タスク / RED → GREEN テスト |
 |---|---|---|
-| **M1.0** ✅ | プロジェクト雛形 (`Assets/Scripts/Core/` + `Assets/Tests/EditMode/` + asmdef、Smoke 1 本) | `SmokeTest.Core_Build_Version_IsAccessible` (2026-04-26) |
-| **M1.1** ✅ | `TilePos` + `MoveState` + `Citizen` + `World` (Spawn / Tick / GetCitizenWorldPos) | 16 tests pass、`World_Pos_At_Alpha_Boundaries_Match_Prev_And_Current` 含む (2026-04-26) |
-| **M1.2** ✅ | `Vitals` (immutable struct) + `Resource` (Berry/Water) + World decay/regen tick | 23 tests (Vitals 6 / Resource 10 / WorldDecay 7) + 10k tick stress (2026-04-26)。飢え死に判定は behavior 入る M1.3 で完成 |
-| **M1.3** | `BehaviorState` + 純粋関数 `Decide(...)` + Gather/Drink | `hydration_priority_trumps_food_when_both_low` + `citizen_drinks_then_eats_when_both_needs_low` |
-| **M1.4** | `Animal`（Deer）+ hunt fallback | `citizen_eventually_hunts_deer_when_berries_run_out` |
+| **M1.0** ✅ | プロジェクト雛形 + asmdef (commit `ac6920f`) | — |
+| **M1.1** ✅ | `TilePos` + `MoveState` + `Citizen` + `World` 補間 (commit `cd31481`) | — |
+| **M1.2** ✅ | `Vitals` + `Resource` + decay/regen tick (commit `b9caf8e`) | — |
+| **M1.3** ✅ | `INeedEffect` + `BehaviorState` (5 値) + 純粋関数 `Decide` + Gather/Drink、満腹閾値 0.95、Berry regen を Rust 0.01 → Unity 0.04 に逸脱（`@tasks/lessons.md`） | 31 tests (Effect 5 / Behavior 19 / WorldBehavior 7) — hydration 優先・drinks_then_eats・10k 生存全 pass (2026-04-26) |
+| **M1.4** | `Animal`（Deer）+ hunt fallback | `eventually_hunts_deer_when_berries_run_out` |
 
-#### 共通ルール
+#### M1 完了スライスから引き継ぐ確定事項
 
 - tick 順序は Rust 版と同一: `decay → decide → step → history → regenerate → random_walk`
 - ゲームバランス定数は `delphai-godot-rust/crates/delphai-core/` と 1:1 同期（C# 側コメントで `// from delphai-core <file>:<sym> as of commit <sha>` と紐付け）
-- 名前空間: `DelphAi.Core` / `DelphAi.Core.Tests`
-- 各スライスの **3 点検証**:
+- 名前空間: `DelphAi.Core` / `DelphAi.Core.Tests`、`DelphAi.Core` asmdef は `noEngineReferences=true` で UnityEngine 依存禁止
+- テスト asmdef は `defineConstraints: ["UNITY_INCLUDE_TESTS"]` 必須、`autoReferenced: false`
+- 新 asmdef 追加直後は MCP `refresh_unity` を `scope=all` で叩く（`scope=scripts` だと `.meta` 生成が走らずテストランナーに認識されない）
+- `MathF.Round` は `MidpointRounding.AwayFromZero` 明示（既定の ToEven は Rust `f32::round` と一致しない）
+- `Vitals` は immutable readonly struct。`List<Vitals>` の indexer はコピー返しなので `list[i] = list[i].WithFedDecay(x)` で書き戻す（フィールド直接代入はコンパイルエラー）
+- 各スライスの 3 点検証:
   1. Unity MCP `read_console` error 0 + `run_tests` Edit Mode で当該テスト pass
-  2. devcontainer `cd delphai-godot-rust && cargo test --workspace` 167 維持（Don't burn the bridge）
+  2. devcontainer `cd delphai-godot-rust && cargo test --workspace` 154+13=167 維持（Don't burn the bridge）
   3. Mac 目視は最終 Slice 後にまとめて
 
 #### 含めない（M1 スコープ外）
@@ -203,6 +164,7 @@
 - LLM 連動 (`citizen.rs` / `llm/`) — Phase 2 で再構築
 - gdext FFI 相当 — Unity では C# 直接、FFI 不要
 - random_walk は M1.4 まで保留（テストの邪魔になるため）
+- `IConsumeAction` 抽象化・複合 effect・陶器/道具系 — M2 以降（`@tasks/todo.md` 参照）
 
 ### Phase M2: 視覚・地形（2 日）
 

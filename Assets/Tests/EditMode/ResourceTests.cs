@@ -24,28 +24,28 @@ namespace DelphAi.Core.Tests
         }
 
         [Test]
-        public void Gather_Decreases_Amount_By_Gather_Per_Tick()
+        public void Consume_Decreases_Amount_By_Consume_Per_Tick()
         {
             var r = Resource.NewBerry(new TilePos(0, 0));
-            float taken = r.Gather();
-            Assert.That(taken, Is.EqualTo(Resource.GatherPerTick).Within(Eps));
-            Assert.That(r.Amount, Is.EqualTo(Resource.BerryAmountMax - Resource.GatherPerTick).Within(Eps));
+            float taken = r.ConsumeOneTick();
+            Assert.That(taken, Is.EqualTo(Resource.ConsumePerTick).Within(Eps));
+            Assert.That(r.Amount, Is.EqualTo(Resource.BerryAmountMax - Resource.ConsumePerTick).Within(Eps));
         }
 
         [Test]
-        public void Gather_Returns_Zero_And_Leaves_Amount_At_Zero_When_Empty()
+        public void Consume_Returns_Zero_And_Leaves_Amount_At_Zero_When_Empty()
         {
             var r = Resource.WithAmount(ResourceKind.Berry, 0f, new TilePos(0, 0));
-            float taken = r.Gather();
+            float taken = r.ConsumeOneTick();
             Assert.That(taken, Is.EqualTo(0f).Within(Eps));
             Assert.That(r.Amount, Is.EqualTo(0f).Within(Eps));
         }
 
         [Test]
-        public void Gather_On_Nearly_Empty_Takes_Only_Remaining()
+        public void Consume_On_Nearly_Empty_Takes_Only_Remaining()
         {
             var r = Resource.WithAmount(ResourceKind.Berry, 0.3f, new TilePos(0, 0));
-            float taken = r.Gather();
+            float taken = r.ConsumeOneTick();
             Assert.That(taken, Is.EqualTo(0.3f).Within(Eps));
             Assert.That(r.Amount, Is.EqualTo(0f).Within(Eps));
         }
@@ -70,8 +70,8 @@ namespace DelphAi.Core.Tests
         public void Berry_Regenerate_From_Empty_Eventually_Refills()
         {
             var r = Resource.WithAmount(ResourceKind.Berry, 0f, new TilePos(0, 0));
-            // BERRY_AMOUNT_MAX=5, rate=0.01 → 500 ticks to full.
-            for (int i = 0; i < 600; i++)
+            // BERRY_AMOUNT_MAX=5, rate=0.04 → 125 ticks to full.
+            for (int i = 0; i < 200; i++)
             {
                 r.Regenerate();
             }
@@ -91,7 +91,7 @@ namespace DelphAi.Core.Tests
         {
             var r = Resource.NewBerry(new TilePos(0, 0));
             Assert.That(r.IsDepleted, Is.False);
-            for (int i = 0; i < 10; i++) r.Gather();
+            for (int i = 0; i < 10; i++) r.ConsumeOneTick();
             Assert.That(r.IsDepleted, Is.True);
         }
     }
