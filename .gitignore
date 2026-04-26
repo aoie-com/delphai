@@ -105,3 +105,85 @@ InitTestScene*.unity*
 
 # Auto-generated scenes by play mode tests
 /[Aa]ssets/[Ii]nit[Tt]est[Ss]cene*.unity*
+
+# === Project additions ===
+
+# macOS Finder metadata
+**/.DS_Store
+
+# Claude Code local data (plans, memory — developer-specific)
+.claude/
+
+# Stray backups (e.g. accidental ".gitignore copy")
+.gitignore copy
+*.gitignore.bak
+
+# Stray image files at repo root (matches Godot-era rule, kept for safety)
+/*.png
+/*.jpg
+/*.jpeg
+
+# === Asset exclusion (D7: アセットは git 追跡せず別ストレージで管理) ===
+# 方針: コードベースのみを追跡。3D モデル / テクスチャ / 音声 / 動画 / フォント /
+# Unity binary asset / native lib は repo に入れない。アセット入手は外部
+# ストレージ（Drive / Dropbox / S3 / Unity Asset Store の都度 DL）。
+
+# 3D models
+*.fbx
+*.FBX
+*.glb
+*.gltf
+*.obj
+*.blend
+*.dae
+*.3ds
+*.max
+*.ma
+*.mb
+
+# Textures / images（root の `/*.png` 等は既に除外済、ここは全階層）
+**/*.png
+**/*.jpg
+**/*.jpeg
+**/*.tga
+**/*.tif
+**/*.tiff
+**/*.psd
+**/*.dds
+**/*.hdr
+**/*.exr
+**/*.bmp
+
+# Audio
+*.wav
+*.mp3
+*.ogg
+*.aif
+*.aiff
+*.flac
+
+# Video
+*.mp4
+*.mov
+*.webm
+
+# Fonts
+*.ttf
+*.otf
+
+# Archives / Unity packages
+*.zip
+*.7z
+*.rar
+*.unitypackage
+
+# Native libraries（旧 prebuilt/.dylib もここで止まる）
+*.dylib
+*.so
+*.dll
+*.a
+*.lib
+
+# 例外: 軽量 / 必須のもの（必要に応じてホワイトリスト）
+!**/icon.png
+!**/inventry.md
