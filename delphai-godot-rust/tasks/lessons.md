@@ -54,6 +54,12 @@
 - **原因**: `apply_response` と `record_heard_speech` が制限なく append し続けた
 - **新メンバーへ**: 新しい記憶追加箇所には必ず上限を設ける。`append_memory()` ヘルパーで最新 N エントリに制限（初期値 8）
 
+## [2026-04] [Unity/macOS] iCloud Drive Documents同期で Library/PackageCache が壊れる
+
+- **状況**: Unity 起動時に `* 2` 重複ファイル(`Editor 2`, `package 2.json`等)、`unexpectedly altered`、`error CS0234 UnityEngine.TestTools.Utils not exists` が大量発生。PackageCache 削除しても再起動すると重複が即復活
+- **原因**: プロジェクトが `~/Documents/project/delphai/` 配下にあり、iCloud Drive の「Desktop & Documents」同期が `Library/PackageCache/` をリアルタイム同期。バイナリキャッシュが転送中に競合解決で `* 2` が量産される。Mac↔devcontainer は virtiofs マウントで、host側の破損が container にそのまま流れる
+- **新メンバーへ**: Unity プロジェクトは `~/Documents/` の外（例: `~/dev/`）に置く。やむを得ず Documents 配下に置くなら **iCloud の Desktop & Documents 同期を OFF**。同期 ON のまま `Library/PackageCache/` を削除しても無限ループになる。`Library/` は `.gitignore` 済みでも iCloud は別系統なので注意
+
 ---
 
 ## 初日に踏みやすい地雷（新メンバー向け）

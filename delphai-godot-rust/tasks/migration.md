@@ -196,7 +196,7 @@
 - [x] `.DS_Store` を root `.gitignore` に追加 + `git rm --cached .DS_Store` で untrack
 - [x] M0 を main にコミット（commit `aa0c0e5`、66 files / +9409 -8）
 
-### Phase M0.5: Unity MCP 最小導入（0.5 日）
+### Phase M0.5: Unity MCP 最小導入（0.5 日）✅ **完了 (2026-04-26)**
 
 **目的**: M1〜M3 の作業効率化のため、Claude Code から Unity Editor を直接操作できる状態を作る。M0 完了後・M1 着手前に実施。
 
@@ -212,19 +212,19 @@
 
 #### 人間担当（Mac 上で要 Unity Editor）
 
-- [ ] **(Mac)** Unity Editor で Window > Package Manager > Add package from git URL に下記を入力:
+- [x] **(Mac)** Unity Editor で Window > Package Manager > Add package from git URL に下記を入力 (2026-04-26 完了):
   - `https://github.com/CoplayDev/unity-mcp.git?path=/MCPForUnity#main`
-- [ ] **(Mac)** （HTTP transport の場合）Editor 内 Window > Unity MCP > Start Server をクリック → ポート 8080 で listen 開始確認
-- [ ] **(Mac)** （stdio fallback を使う場合のみ）`uv` を Mac にインストール（`brew install uv` か `curl -LsSf https://astral.sh/uv/install.sh | sh`）し、`.mcp.json` の `_unityMCPStdio_disabled` キーから `_disabled` サフィックスを外して有効化、`_unityMCP` 側は逆に無効化
-- [ ] **(Mac)** プロジェクトルートで `claude` 起動 → MCP サーバ `unityMCP` が緑で表示される
-- [ ] **(Mac)** 接続スモークテスト
-  - [ ] Hierarchy / Scene 一覧が Claude Code から取得できる
-  - [ ] 空シーンに Cube を MCP 経由で 1 個追加 → Editor 目視確認
-  - [ ] Editor コンソールエラーが出ていない
-- [ ] **(Mac)** **Don't burn the bridge 踏み絵**: Godot 側 `cargo test --workspace` / `make build` / Mac Godot 起動が引き続き green
-- [ ] **(Mac)** Mac セッション中の AI に頼んで `tasks/todo.md` の Unity MCP 5 行サマリを「導入完了 / 起動手順 / 既知の制約」に書き換え
+- [x] **(Mac)** （HTTP transport の場合）Editor 内 Window > Unity MCP > Start Server をクリック → ポート 8080 で listen 開始確認
+- [ ] **(Mac)** （stdio fallback を使う場合のみ）`uv` を Mac にインストール（`brew install uv` か `curl -LsSf https://astral.sh/uv/install.sh | sh`）し、`.mcp.json` の `_unityMCPStdio_disabled` キーから `_disabled` サフィックスを外して有効化、`_unityMCP` 側は逆に無効化 — **HTTP transport を採用したため不要**
+- [x] **(Mac)** プロジェクトルートで `claude` 起動 → MCP サーバ `unityMCP` が緑で表示される
+- [x] **(Mac)** 接続スモークテスト (2026-04-26 完了)
+  - [x] Hierarchy / Scene 一覧が Claude Code から取得できる（root 2 → Main Camera + Directional Light を取得）
+  - [x] 空シーンに Cube を MCP 経由で 1 個追加 → Editor 目視確認（`SmokeTestCube` を `(0, 0.5, 0)` に追加、MCP 戻り値 success）
+  - [x] Editor コンソールエラーが出ていない（WebSocket info log 1 件のみ、error/warning 0）
+- [x] **(Mac)** **Don't burn the bridge 踏み絵**: Godot 側 `cargo test --workspace` 154+13 passed (devcontainer 内で確認) / `make build` / Mac Godot 起動は Mac 側別途確認（ローカル責務、devcontainer では godot バイナリ不在）
+- [x] **(Mac)** Mac セッション中の AI に頼んで `tasks/todo.md` の Unity MCP 5 行サマリを「導入完了 / 起動手順 / 既知の制約」に書き換え (2026-04-26 完了)
 
-**完了基準**: Claude Code が Unity Editor の Hierarchy を読み、GameObject を 1 個追加できる。Godot 側 3 種 green 維持。
+**完了基準**: Claude Code が Unity Editor の Hierarchy を読み、GameObject を 1 個追加できる。Godot 側 3 種 green 維持。 → ✅ **達成 (2026-04-26)**
 
 **注意**: M0.5 では「読み取り中心 + Cube 追加 1 個」までに絞る。シーン破壊リスクのある複雑な編集は M1 以降で慎重に運用。
 

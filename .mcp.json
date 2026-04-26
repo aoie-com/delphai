@@ -1,19 +1,9 @@
 {
-  "_comment": "Unity MCP (CoplayDev/unity-mcp v9.6.6) — Phase M0.5. HTTP default. Mac で Unity Editor 起動 + Window > Unity MCP > Start Server を押した状態で Claude Code を起動すると接続される。stdio に切り替えたい場合は下の unityMCPStdio を有効化",
+  "_comment": "Unity MCP (CoplayDev/unity-mcp v9.6.6) — Phase M0.5。Mac の Unity Editor 内 MCP for Unity Window で Advanced > 'Allow LAN Bind (HTTP Local)' を ON、Connection > HTTP Local URL を http://0.0.0.0:8080 に変更して Save → Start Server。devcontainer からは host.docker.internal:8080 で届く。stdio transport は Python が Mac の Unity Bridge ポートに直接届く必要があり、結局 Mac 側で別の LAN bind 設定が要るので fallback として機能しない（採用しない）",
   "mcpServers": {
     "unityMCP": {
-      "url": "http://localhost:8080/mcp"
-    },
-    "_unityMCPStdio_disabled": {
-      "_comment": "Fallback: HTTP がポート競合・LAN binding 制約で動かない場合に有効化。uv (Python 3.10+) が PATH 上に必要",
-      "command": "uvx",
-      "args": [
-        "--from",
-        "mcpforunityserver",
-        "mcp-for-unity",
-        "--transport",
-        "stdio"
-      ]
+      "type": "http",
+      "url": "http://host.docker.internal:8080/mcp"
     }
   }
 }

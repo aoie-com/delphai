@@ -12,7 +12,15 @@
   },
 
   "postCreateCommand": "bash .devcontainer/setup.sh",
- 
+
+  "forwardPorts": [8080],
+  "portsAttributes": {
+    "8080": {
+      "label": "Unity MCP (host)",
+      "onAutoForward": "silent"
+    }
+  },
+
   "customizations": {
     "vscode": {
       "extensions": [

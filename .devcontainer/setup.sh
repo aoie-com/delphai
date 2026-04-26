@@ -39,3 +39,4 @@ EOF
 echo ""
 echo "✅ Setup complete!"
 echo "   コンテナ内で 'claude' を実行して認証してください。"
+echo "   Unity MCP は .mcp.json (project scope) で配布。Unity 側で MCP for Unity Window > Allow LAN Bind (HTTP Local) を ON、Start Server を実行してください。"
