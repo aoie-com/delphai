@@ -232,15 +232,45 @@
 
 **Godot 側の動作に一切触らない**（`delphai-godot-rust/` 配下は読み取り専用扱い）
 
-- [ ] `Assets/Scripts/Core/` に `World` / `Citizen` / `Animal` / `Resource` / `MoveState` / `BehaviorState` を C# で再実装
-- [ ] tick 順序は Rust 版と同一: `decay → decide → step → history → regenerate → random_walk`
-- [ ] ゲームバランス定数は `delphai-godot-rust/crates/delphai-core/` と 1:1 同期（コメントで `// from delphai-core N? as of commit <sha>` と紐付け）
-- [ ] Unity Test Framework (Edit Mode) で最低限の回帰テストを移植:
-  - [ ] `hydration_priority_trumps_food_when_both_low`
-  - [ ] `citizen_runs_many_cycles_without_freezing`（10k tick 飢え死にしない）
-  - [ ] `citizen_eventually_hunts_deer_when_berries_run_out`（hunt fallback 発火）
-  - [ ] `citizen_drinks_then_eats_when_both_needs_low`（Satiated trap 回避）
-- [ ] **検証**: C# 側テスト pass + `cd delphai-godot-rust && cargo test --workspace` も引き続き pass
+#### 移植元の規模（2026-04-26 棚卸し）
+
+| ファイル | LOC | M1 移植 | 備考 |
+|---|---:|---|---|
+| `crates/delphai-core/src/world.rs` | 679 | ✅ | tick 順序の本体 |
+| `crates/delphai-core/src/move_state.rs` | 381 | ✅ | 補間 + step + step_with_grid |
+| `crates/delphai-core/src/agent/behavior.rs` | 270 | ✅ | `decide` 純粋関数 |
+| `crates/delphai-core/src/pathfinding.rs` | 158 | 部分 | `WalkGrid` の最低限のみ（`step_with_grid` 経由で必要） |
+| `crates/delphai-core/src/resource.rs` | 139 | ✅ | Berry / Water |
+| `crates/delphai-core/src/agent/citizen.rs` | 120 | ❌ | LLM 専用、Phase 2 で再構築 |
+| `crates/delphai-core/src/llm/*` | — | ❌ | Phase 2 で再構築 |
+| **合計** | ~1,750 | ~1,500 | citizen.rs / llm/ を除外 |
+
+#### スライス計画（各スライスで 3 点検証 + commit）
+
+| Slice | 範囲 | RED → GREEN テスト |
+|---|---|---|
+| **M1.0** ✅ | プロジェクト雛形 (`Assets/Scripts/Core/` + `Assets/Tests/EditMode/` + asmdef、Smoke 1 本) | `SmokeTest.Core_Build_Version_IsAccessible` (2026-04-26) |
+| **M1.1** | `MoveState` + `World.GetCitizenWorldPos(idx, alpha)` 補間 | `world_pos_at_alpha_boundaries_match_prev_and_current` 系 2-3 本 |
+| **M1.2** | `Resource`（Berry/Water）+ `Vitals` + decay tick | `citizen_runs_many_cycles_without_freezing`（10k tick） |
+| **M1.3** | `BehaviorState` + 純粋関数 `Decide(...)` + Gather/Drink | `hydration_priority_trumps_food_when_both_low` + `citizen_drinks_then_eats_when_both_needs_low` |
+| **M1.4** | `Animal`（Deer）+ hunt fallback | `citizen_eventually_hunts_deer_when_berries_run_out` |
+
+#### 共通ルール
+
+- tick 順序は Rust 版と同一: `decay → decide → step → history → regenerate → random_walk`
+- ゲームバランス定数は `delphai-godot-rust/crates/delphai-core/` と 1:1 同期（C# 側コメントで `// from delphai-core <file>:<sym> as of commit <sha>` と紐付け）
+- 名前空間: `DelphAi.Core` / `DelphAi.Core.Tests`
+- 各スライスの **3 点検証**:
+  1. Unity MCP `read_console` error 0 + `run_tests` Edit Mode で当該テスト pass
+  2. devcontainer `cd delphai-godot-rust && cargo test --workspace` 167 維持（Don't burn the bridge）
+  3. Mac 目視は最終 Slice 後にまとめて
+
+#### 含めない（M1 スコープ外）
+
+- `WalkGrid` 全機能（M2 で地形と一緒に） — M1 では `step_with_grid` の最低限だけ
+- LLM 連動 (`citizen.rs` / `llm/`) — Phase 2 で再構築
+- gdext FFI 相当 — Unity では C# 直接、FFI 不要
+- random_walk は M1.4 まで保留（テストの邪魔になるため）
 
 ### Phase M2: 視覚・地形（2 日）
 
