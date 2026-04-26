@@ -118,12 +118,14 @@
 - **Phase M4 まで**: Mac ローカルビルドのみ。Rust 側の `cargo test` は GitHub Actions で継続
 - **Phase M5 以降**: Unity ビルドの CI 化を検討、ローカル Mac で十分ならスコープ外
 
-### Q6. Unity MCP 実装の選定
+### Q6. Unity MCP 実装の選定 — ✅ **CoplayDev/unity-mcp に確定（2026-04-26）**
 
-- **候補 A**: `coplaydev/unity-mcp`（star 数最多、UPM 経由 / Python ブリッジ、暫定推奨）
-- **候補 B**: `justinpbarnett/unity-mcp`（軽量、個人 fork）
-- **判断基準**: メンテ頻度 / Unity 6 LTS 対応 / Claude Code 公式 MCP プロトコル準拠
-- **判断時期**: Phase M0.5 着手時（候補 A で動作確認、ダメなら B へ）
+- **採用**: `CoplayDev/unity-mcp` v9.6.6（2026-04-07 リリース）
+  - UPM git URL: `https://github.com/CoplayDev/unity-mcp.git?path=/MCPForUnity#main`
+  - Unity 2021.3 LTS+ をサポート、v9.6.1 で Unity 6+ ビルドプロファイル対応明記
+  - Python 3.10+ + `uv` が必要（stdio fallback 用、HTTP transport なら不要）
+  - 既定 transport: HTTP (`http://localhost:8080/mcp`)、Editor 内で "Start Server" を押すと起動
+- **`justinpbarnett/unity-mcp` は不採用** — 同リリースストリーム (v9.6.6) を CoplayDev 側が維持しており、実質的に CoplayDev に統合済
 - **CI 統合**: M6 で要否判断、不要なら Phase 2 以降へ持ち越し
 
 ---
@@ -174,7 +176,7 @@
 
 ## 移行フェーズ（Don't burn the bridge 準拠）
 
-### Phase M0: Unity 環境セットアップ（0.5 日）✅ 大半完了 (2026-04-26)
+### Phase M0: Unity 環境セットアップ（0.5 日）✅ **完了 (2026-04-26, commit aa0c0e5)**
 
 **並列作業、Godot+Rust は無影響**
 
@@ -192,6 +194,7 @@
   - `make build` / Godot 起動は Mac 環境で別途確認（ローカル責務、devcontainer では godot バイナリ不在）
 - [x] root の `.gitignore copy` を削除（古い Godot 用 ignore のバックアップ、不要）
 - [x] `.DS_Store` を root `.gitignore` に追加 + `git rm --cached .DS_Store` で untrack
+- [x] M0 を main にコミット（commit `aa0c0e5`、66 files / +9409 -8）
 
 ### Phase M0.5: Unity MCP 最小導入（0.5 日）
 
@@ -199,17 +202,27 @@
 
 **前提**: Phase M0 完了（Unity 6 LTS / repo ルート直下に Unity プロジェクト存在 / Mac で Play 可）
 
-- [ ] Unity MCP 実装の最終選定（Q6、30 分以内）
-  - 暫定: `coplaydev/unity-mcp`（Unity 6 LTS 対応・直近メンテを再確認）
-- [ ] Unity Package Manager から git URL で MCP package 追加
-- [ ] Python ブリッジを `pipx` か venv で隔離インストール
-- [ ] Claude Code 側 MCP 設定（プロジェクト `.mcp.json` 推奨）に Unity MCP server を登録
-- [ ] 接続スモークテスト
+> **AI / 人間タスク分離**: AI (devcontainer) では Editor が触れないので調査・設定ファイル雛形まで。実機接続テストとパッケージインストールは Mac 上の人間担当。`(AI)` / `(Mac)` で明示。
+
+#### AI 担当（devcontainer 内で完了可）
+
+- [x] **(AI)** Unity MCP 実装の最終選定（Q6 結論: `CoplayDev/unity-mcp` v9.6.6、2026-04-26 更新参照）
+- [x] **(AI)** プロジェクトルート `.mcp.json` 雛形を用意（HTTP transport を既定、stdio fallback を `_unityMCPStdio_disabled` キーで無効化状態でコメントアウト）
+- [x] **(AI)** `delphai-godot-rust/tasks/todo.md` に Unity MCP 導入予定 / 接続手順 / 既知の制約を 5 行サマリで追記
+
+#### 人間担当（Mac 上で要 Unity Editor）
+
+- [ ] **(Mac)** Unity Editor で Window > Package Manager > Add package from git URL に下記を入力:
+  - `https://github.com/CoplayDev/unity-mcp.git?path=/MCPForUnity#main`
+- [ ] **(Mac)** （HTTP transport の場合）Editor 内 Window > Unity MCP > Start Server をクリック → ポート 8080 で listen 開始確認
+- [ ] **(Mac)** （stdio fallback を使う場合のみ）`uv` を Mac にインストール（`brew install uv` か `curl -LsSf https://astral.sh/uv/install.sh | sh`）し、`.mcp.json` の `_unityMCPStdio_disabled` キーから `_disabled` サフィックスを外して有効化、`_unityMCP` 側は逆に無効化
+- [ ] **(Mac)** プロジェクトルートで `claude` 起動 → MCP サーバ `unityMCP` が緑で表示される
+- [ ] **(Mac)** 接続スモークテスト
   - [ ] Hierarchy / Scene 一覧が Claude Code から取得できる
   - [ ] 空シーンに Cube を MCP 経由で 1 個追加 → Editor 目視確認
   - [ ] Editor コンソールエラーが出ていない
-- [ ] **Don't burn the bridge 踏み絵**: Godot 側 `cargo test --workspace` / `make build` / Mac Godot 起動が引き続き green
-- [ ] `tasks/todo.md` に「Unity MCP 導入完了 / 接続手順 / 既知の制約」を 5 行で残す
+- [ ] **(Mac)** **Don't burn the bridge 踏み絵**: Godot 側 `cargo test --workspace` / `make build` / Mac Godot 起動が引き続き green
+- [ ] **(Mac)** Mac セッション中の AI に頼んで `tasks/todo.md` の Unity MCP 5 行サマリを「導入完了 / 起動手順 / 既知の制約」に書き換え
 
 **完了基準**: Claude Code が Unity Editor の Hierarchy を読み、GameObject を 1 個追加できる。Godot 側 3 種 green 維持。
 

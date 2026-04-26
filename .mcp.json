@@ -1,0 +1,19 @@
+{
+  "_comment": "Unity MCP (CoplayDev/unity-mcp v9.6.6) — Phase M0.5. HTTP default. Mac で Unity Editor 起動 + Window > Unity MCP > Start Server を押した状態で Claude Code を起動すると接続される。stdio に切り替えたい場合は下の unityMCPStdio を有効化",
+  "mcpServers": {
+    "unityMCP": {
+      "url": "http://localhost:8080/mcp"
+    },
+    "_unityMCPStdio_disabled": {
+      "_comment": "Fallback: HTTP がポート競合・LAN binding 制約で動かない場合に有効化。uv (Python 3.10+) が PATH 上に必要",
+      "command": "uvx",
+      "args": [
+        "--from",
+        "mcpforunityserver",
+        "mcp-for-unity",
+        "--transport",
+        "stdio"
+      ]
+    }
+  }
+}
