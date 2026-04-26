@@ -21,21 +21,6 @@
 
 ---
 
-## なぜ移行するか
-
-1. **アセット互換性** — Unreal/Unity 向けの 3D アセット（人型モデル含む）を既に所有。Godot への変換コストが高い
-2. **エコシステム** — チュートリアル・ドキュメント・アセットストアの厚み、Unity を正しく習得できる
-3. **ロボ学習との親和性**（副次的） — Unity Robotics Hub / ROS-TCP-Connector に将来アクセスしやすい
-
-**許容するコスト**:
-- ロイヤリティリスク（Unity Personal $200k/年まで無料。現段階では実質ゼロ）
-- クローズドソースへの依存
-- 現スプリント N9.1 の Terrain3D / 斜面歩行チューニング資産の大半（教訓は残る）
-
-**スコープ外**: ロボティクス学習は別トラック（`tasks/robotics-learning.md` で今後扱う、本移行には含めない）。
-
----
-
 ## 決定事項
 
 ### ✅ D1. 中核ロジックの言語は **C# 一本化**（確定 2026-04-23）
@@ -50,83 +35,30 @@
 - 決定論が弱くなる（強化学習環境化を将来やる際に再検討）
 - Rust の `delphai-core` で育てた borrow checker ガード付きロジックは捨てる
 
-### ✅ D2. リポジトリ構造: **モノレポ（Unity をルート、Godot+Rust をサブディレクトリ）**
+### Q2. Git LFSなし
 
-**変更点（2026-04-26）**: 当初は Unity を `unity/` サブディレクトリに置く計画だったが、Unity 6 LTS のプロジェクト作成が **repo ルート直下**で完了したため、構造を反転：旧 Godot+Rust 一式を `delphai-godot-rust/` 配下にまとめ、Unity を root に配置する形で確定した。
+- root `.gitignore` でバイナリ拡張子（`*.fbx` `*.glb` `**/*.png` `*.wav` 等）を除外、`!**/icon.png` `!**/inventry.md` 等の必須軽量ファイルのみホワイトリスト
+### Q3. MCPForUnity
 
-```
-/workspaces/delphai/
-├── Assets/                    ← Unity プロジェクト（root）
-├── Packages/                  ← Unity packages
-├── ProjectSettings/           ← Unity settings
-├── Library/ Logs/ Temp/ UserSettings/  ← Unity 自動生成（gitignore）
-├── delphai-godot-rust/        ← 旧 Godot+Rust 一式、Phase M4 まで保存
-│   ├── crates/                ← Rust ロジック
-│   ├── game/                  ← Godot プロジェクト
-│   ├── prebuilt/              ← .dylib 等
-│   ├── Makefile               ← `make build` / `make smoke-*`
-│   ├── tasks/                 ← lessons.md / todo.md / migration.md
-│   ├── docs/                  ← CODEMAPS など
-│   └── CLAUDE.md              ← Godot 期の検証順
-├── tasks/                     ← Unity 期の TODO（必要なら新設）
-├── docs/                      ← Unity 期の CODEMAPS（M2 で新規）
-├── .gitignore                 ← Unity 用（root）
-├── .gitattributes             ← Git LFS 設定（M0 で導入）
-└── CLAUDE.md                  ← Unity 期の検証順（M6 で正式更新）
-```
-
-**理由**: 別 repo にすると cross-reference（lessons.md / CODEMAPS / 既存ゲームバランス定数）が断絶する。モノレポならコミット履歴が連続。
-**反転の根拠**: Unity プロジェクトを `unity/` サブディレクトリに後から押し込むには `Assets/`〜`ProjectSettings/` を一括移動 + Unity 側のメタ再生成が必要で、リスクが高い。**Unity 側は触らず Godot+Rust を `delphai-godot-rust/` へ退避** したほうが破壊が少ない。
+- **`justinpbarnett/unity-mcp` は不採用** — 同リリースストリーム (v9.6.6) を CoplayDev 側が維持しており、実質的に CoplayDev に統合済
+- **CI 統合**: M6 で要否判断、不要なら Phase 2 以降へ持ち越し
 
 ---
 
 ## 保留中の意思決定
 
-### Q1. Unity バージョン
-
-- **候補**: Unity 6 LTS（2024.x LTS 後継）。DOTS 1.x / Entities 1.x が安定
-- **要検証**: URP vs HDRP（Phase 1 は URP 想定、パフォーマンス優先）
-- **判断時期**: Phase M0 着手時（Mac 上で Unity Hub から LTS 選定）
-
-### Q2. Terrain ソリューション
+### Q1. Terrain ソリューション
 
 - **候補 A**: Unity Terrain（標準、無料、Terrain Tools パッケージで OK）
 - **候補 B**: MicroSplat / MegaSplat（アセットストア、有料）
 - **Phase 1 方針**: 候補 A で始める。シェーダ品質に不満が出たら B に移行
 - **判断時期**: Phase M2 着手時
 
-### Q3. アセット共有 (`assets-shared/`) の運用
-
-- Godot の `game/assets/` にある GLB/FBX/SFX を Unity からも参照したい
-- 選択肢:
-  - (a) `assets-shared/` を新設し両方が参照（Godot の `.import` メタを壊さず移せるか要検証）
-  - (b) Unity 側に `unity/Assets/Imported/` としてコピーし、移行完了まで二重管理
-- **Phase M3 着手時**に決定。(b) が安全、(a) が美しい
-
-### Q4. Git LFS 切替タイミング — ✅ **採用しないことに変更（2026-04-26）**
-
-- **方針転換**: Git で追跡するのはコードベースのみ。アセット（3D モデル / テクスチャ / 音声 / 動画 / Unity package 等）は repo に入れない
-- アセット入手は外部ストレージ（Google Drive / Dropbox / S3 / Unity Asset Store の都度 DL）で運用
-- root `.gitignore` でバイナリ拡張子（`*.fbx` `*.glb` `**/*.png` `*.wav` 等）を除外、`!**/icon.png` `!**/inventry.md` 等の必須軽量ファイルのみホワイトリスト
-- LFS 関連: `git lfs uninstall` 済 / `.gitattributes` 削除済
-- 旧 Godot 期の `delphai-godot-rust/game/assets/` は inner `.gitignore` で既に対象外、LFS は出番無し
-- **例外**: `delphai-godot-rust/prebuilt/*.dylib` は Godot 動作に必要な build artifact として inner `.gitignore` の `!prebuilt/**/*.dylib` で tracked のまま（Don't burn the bridge 解除の M5 で削除）
-
-### Q5. CI 戦略
+### Q2. CI 戦略
 
 - Unity headless build は Unity Pro ライセンスが必要（Personal でも CLI build 可能だが制約あり）
 - **Phase M4 まで**: Mac ローカルビルドのみ。Rust 側の `cargo test` は GitHub Actions で継続
 - **Phase M5 以降**: Unity ビルドの CI 化を検討、ローカル Mac で十分ならスコープ外
-
-### Q6. Unity MCP 実装の選定 — ✅ **CoplayDev/unity-mcp に確定（2026-04-26）**
-
-- **採用**: `CoplayDev/unity-mcp` v9.6.6（2026-04-07 リリース）
-  - UPM git URL: `https://github.com/CoplayDev/unity-mcp.git?path=/MCPForUnity#main`
-  - Unity 2021.3 LTS+ をサポート、v9.6.1 で Unity 6+ ビルドプロファイル対応明記
-  - Python 3.10+ + `uv` が必要（stdio fallback 用、HTTP transport なら不要）
-  - 既定 transport: HTTP (`http://localhost:8080/mcp`)、Editor 内で "Start Server" を押すと起動
-- **`justinpbarnett/unity-mcp` は不採用** — 同リリースストリーム (v9.6.6) を CoplayDev 側が維持しており、実質的に CoplayDev に統合済
-- **CI 統合**: M6 で要否判断、不要なら Phase 2 以降へ持ち越し
 
 ---
 
@@ -251,7 +183,7 @@
 |---|---|---|
 | **M1.0** ✅ | プロジェクト雛形 (`Assets/Scripts/Core/` + `Assets/Tests/EditMode/` + asmdef、Smoke 1 本) | `SmokeTest.Core_Build_Version_IsAccessible` (2026-04-26) |
 | **M1.1** ✅ | `TilePos` + `MoveState` + `Citizen` + `World` (Spawn / Tick / GetCitizenWorldPos) | 16 tests pass、`World_Pos_At_Alpha_Boundaries_Match_Prev_And_Current` 含む (2026-04-26) |
-| **M1.2** | `Resource`（Berry/Water）+ `Vitals` + decay tick | `citizen_runs_many_cycles_without_freezing`（10k tick） |
+| **M1.2** ✅ | `Vitals` (immutable struct) + `Resource` (Berry/Water) + World decay/regen tick | 23 tests (Vitals 6 / Resource 10 / WorldDecay 7) + 10k tick stress (2026-04-26)。飢え死に判定は behavior 入る M1.3 で完成 |
 | **M1.3** | `BehaviorState` + 純粋関数 `Decide(...)` + Gather/Drink | `hydration_priority_trumps_food_when_both_low` + `citizen_drinks_then_eats_when_both_needs_low` |
 | **M1.4** | `Animal`（Deer）+ hunt fallback | `citizen_eventually_hunts_deer_when_berries_run_out` |
 
